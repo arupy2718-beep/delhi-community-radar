@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin Console · Delhi Community Radar</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23070908' stroke='%23f43f5e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f43f5e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/theme.css">
+<style>
+.lock{min-height:calc(100vh - 52px);display:grid;place-items:center;padding:24px;position:relative;z-index:1}
+.lockbox{width:100%;max-width:420px}
+.lockbox h1{font-size:34px;letter-spacing:-.03em;margin:6px 0 8px}
+.lockbox p{color:var(--mut);font-size:14px;margin-bottom:18px}
+.err{font-family:var(--mono);font-size:12px;color:var(--r);min-height:18px;margin-top:10px}
+.admin{padding:28px 0 60px;position:relative;z-index:1}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.top h1{font-size:clamp(26px,3vw,38px);letter-spacing:-.03em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.stats div{background:var(--panel);padding:16px 20px}
+.stats .n{font-size:34px;font-weight:600;letter-spacing:-.03em;margin-top:4px}
+.layout{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tabs{display:flex;gap:6px}
+.tab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--mut);border:1px solid var(--line2);border-radius:8px;padding:8px 12px;cursor:pointer}
+.tab.on{color:var(--acc);border-color:var(--acc)}
+.bar input{max-width:260px;margin-left:auto;padding:8px 12px;font-size:13px}
+.item{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:var(--panel)}
+.item.bad{border-color:#5a1d2b;background:rgba(244,63,94,.06)}
+.item .h{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;font-weight:500}
+.item .h .loc{color:var(--mut);font-weight:400}
+.item .txt{margin:10px 0;font-size:14px;color:#d6dcd8;white-space:pre-wrap;word-break:break-word}
+.item .meta{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.06em}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.log{font:11.5px/1.7 var(--mono);color:#9fc9b2}
+.log div{padding:4px 0;border-bottom:1px dashed var(--line)}
+.log .a{color:var(--acc);display:inline-block;min-width:94px}
+.log .a.del{color:var(--r)}.log .a.hide{color:var(--o)}
+.empty{padding:40px 10px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:12px}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.sys-nav{display:none}}
+@media(max-width:560px){.wrap{padding:0 16px}.stats .n{font-size:26px}.bar input{max-width:none;margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+<header class="sysbar">
+  <div class="wrap">
+    <div class="sys-left"><span class="dot" style="background:var(--r)"></span><b>ADMIN CONSOLE</b><span>· RESTRICTED</span></div>
+    <nav class="sys-nav"><a href="/">← Public site</a></nav>
+    <button class="btn ghost sm" id="logout" type="button" style="margin-left:auto;display:none">Lock</button>
+  </div>
+</header>
+
+<!-- login -->
+<div class="lock" id="lock">
+  <div class="lockbox panel" style="padding:26px">
+    <div class="label">Authentication required</div>
+    <h1>Unlock console</h1>
+    <p>Moderators only. Review flagged reports and remove offensive or spam content.</p>
+    <form id="form" autocomplete="off">
+      <label class="sr" for="pw">Admin password</label>
+      <input id="pw" type="password" placeholder="Admin password" autocomplete="current-password" required>
+      <div class="err" id="err" role="alert"></div>
+      <button class="btn" type="submit" style="width:100%;margin-top:6px" id="unlock">Unlock →</button>
+    </form>
+  </div>
+</div>
+
+<!-- console -->
+<main class="admin" id="app" style="display:none">
+  <div class="wrap">
+    <div class="top"><div><div class="label">Moderation</div><h1>Report review</h1></div>
+      <button class="btn ghost sm" id="reload" type="button">↻ Refresh</button></div>
+    <div class="stats">
+      <div><div class="label">Total reports</div><div class="n" id="nTotal">0</div></div>
+      <div><div class="label">Needs review / hidden</div><div class="n" id="nHidden" style="color:var(--r)">0</div></div>
+      <div><div class="label">Visible to public</div><div class="n" id="nVis" style="color:var(--acc)">0</div></div>
+    </div>
+    <div class="layout">
+      <div>
+        <div class="bar">
+          <div class="tabs" role="tablist">
+            <button class="tab on" data-f="review" type="button">Needs review</button>
+            <button class="tab" data-f="all" type="button">All</button>
+            <button class="tab" data-f="visible" type="button">Visible</button>
+          </div>
+          <input id="q" type="search" placeholder="Search text, area, category…" aria-label="Search reports">
+        </div>
+        <div id="list"></div>
+      </div>
+      <div class="panel" style="position:sticky;top:68px">
+        <div class="panel-h"><span><b>LOG</b> / Admin activity</span><span>latest 40</span></div>
+        <div class="panel-b log" id="log" style="max-height:540px"></div>
+      </div>
+    </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sevOf=p=>p>=80?'r':p>=60?'o':p>=40?'y':'g';
+let token=null,data={reports:[],audit:[]},filter='review',timer=null;
+try{token=sessionStorage.getItem('radar_admin')}catch(e){}
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2600)}
+function setAuthed(on){
+  $('lock').style.display=on?'none':'grid';$('app').style.display=on?'block':'none';$('logout').style.display=on?'inline-flex':'none';
+  clearInterval(timer);if(on)timer=setInterval(load,20000);
+}
+async function api(path,opt={}){
+  const res=await fetch(path,{...opt,headers:{...(opt.headers||{}),'X-Admin-Token':token||''}});
+  if(res.status===401){token=null;try{sessionStorage.removeItem('radar_admin')}catch(e){}setAuthed(false);throw new Error('auth')}
+  const body=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(body.detail||'Request failed');
+  return body;
+}
+$('form').onsubmit=async e=>{
+  e.preventDefault();$('err').textContent='';$('unlock').disabled=true;
+  try{
+    const fd=new FormData();fd.append('password',$('pw').value);
+    const res=await fetch('/api/admin/login',{method:'POST',body:fd});
+    const body=await res.json().catch(()=>({}));
+    if(!res.ok){$('err').textContent=body.detail||'Login failed';return}
+    token=body.token;try{sessionStorage.setItem('radar_admin',token)}catch(e){}
+    $('pw').value='';setAuthed(true);await load();
+  }catch(e){$('err').textContent='Could not reach the server.'}
+  finally{$('unlock').disabled=false}
+};
+$('logout').onclick=()=>{token=null;try{sessionStorage.removeItem('radar_admin')}catch(e){}setAuthed(false)};
+$('reload').onclick=()=>load();
+
+async function load(){
+  try{data=await api('/api/admin/reports')}catch(e){if(e.message!=='auth')toast(e.message);return}
+  $('nTotal').textContent=data.total;$('nHidden').textContent=data.hidden;$('nVis').textContent=data.total-data.hidden;
+  render();
+}
+function render(){
+  const q=$('q').value.trim().toLowerCase();
+  let rows=data.reports.filter(r=>filter==='all'||(filter==='review'?r.hidden:!r.hidden));
+  if(q)rows=rows.filter(r=>[r.text,r.locality,r.category,r.summary].join(' ').toLowerCase().includes(q));
+  $('list').innerHTML=rows.length?rows.map(r=>`<article class="item ${r.hidden?'bad':''}">
+    <div class="h"><span class="badge sev-${sevOf(r.priority)}">${esc(r.priority)}</span>${esc(r.category)} <span class="loc">· ${esc(r.locality)}</span>
+      ${r.hidden?`<span class="tag warn">${esc(r.flag_reason||'Flagged by citizens')}</span>`:''}
+      ${r.abuse_reports?`<span class="tag warn">${esc(r.abuse_reports)} citizen flag(s)</span>`:''}</div>
+    <div class="txt">${esc(r.text)}</div>
+    <div class="meta">ID ${esc(r.id)} · ${esc(r.language)} · ${new Date(r.created*1000).toLocaleString()} · ${r.has_photo?'photo attached':'no photo'}</div>
+    <div class="acts">
+      <button class="btn danger sm" data-act="delete" data-id="${esc(r.id)}" type="button">Delete</button>
+      ${r.hidden?`<button class="btn ghost sm" data-act="approve" data-id="${esc(r.id)}" type="button">Approve · restore</button>`:`<button class="btn ghost sm" data-act="hide" data-id="${esc(r.id)}" type="button">Hide</button>`}
+    </div></article>`).join(''):`<div class="empty">${filter==='review'?'Nothing needs review. All clear.':'No reports match.'}</div>`;
+  $('log').innerHTML=(data.audit||[]).length?data.audit.map(a=>`<div><span class="a ${esc(a.action.includes('delete')?'del':a.action==='hide'?'hide':'')}">${esc(a.action)}</span>${esc(new Date(a.t*1000).toLocaleTimeString())}${a.snippet?`<br><span style="color:var(--dim)">${esc(a.snippet)}</span>`:''}${a.note?`<br><span style="color:var(--dim)">${esc(a.note)}</span>`:''}</div>`).join(''):'<div class="empty">No activity yet.</div>';
+}
+$('list').onclick=async e=>{
+  const b=e.target.closest('button[data-act]');if(!b)return;
+  const {act,id}=b.dataset;
+  if(act==='delete'&&!confirm('Delete this report permanently? This cannot be undone.'))return;
+  b.disabled=true;
+  try{
+    if(act==='delete')await api(`/api/admin/reports/${encodeURIComponent(id)}`,{method:'DELETE'});
+    else await api(`/api/admin/reports/${encodeURIComponent(id)}/${act}`,{method:'POST'});
+    toast(act==='delete'?'Report deleted':act==='hide'?'Report hidden from public':'Report restored');await load();
+  }catch(err){if(err.message!=='auth')toast(err.message);b.disabled=false}
+};
+document.querySelector('.tabs').onclick=e=>{const t=e.target.closest('.tab');if(!t)return;filter=t.dataset.f;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));render()};
+$('q').oninput=render;
+
+if(token){setAuthed(true);load()}else setAuthed(false);
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delhi Community Radar</title>
+<meta name="description" content="AI-powered civic triage for Delhi. Report in Hindi, English or Hinglish; the right office hears about the right problem, first.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23070908' stroke='%235cffa8' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%235cffa8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+Devanagari:wght@800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/static/theme.css">
+<style>
+/* ---------- hero ---------- */
+.hero{position:relative;padding:72px 0 56px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:center}
+.deva{position:absolute;right:-1%;top:-6%;font-family:'Noto Sans Devanagari',sans-serif;font-weight:800;font-size:clamp(160px,26vw,420px);line-height:1;color:transparent;-webkit-text-stroke:1px var(--line2);opacity:.55;user-select:none;pointer-events:none;z-index:0}
+.hero-meta{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:26px}
+.hero-meta span{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.hero-meta span b{color:var(--acc);font-weight:600}
+h1{font-size:clamp(46px,8.2vw,112px);line-height:.94;letter-spacing:-.04em;font-weight:700}
+h1 em{font-style:normal;color:var(--acc)}
+h1 .l2{color:var(--mut)}
+.hero p.lead{margin-top:28px;max-width:560px;font-size:clamp(16px,1.6vw,19px);color:var(--mut)}
+.hero p.lead b{color:var(--ink);font-weight:500}
+.cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+.langs{margin-top:34px;display:flex;gap:8px;flex-wrap:wrap}
+.langs .tag{color:var(--ink)}
+/* radar */
+.radar-wrap{position:relative;z-index:1;max-width:440px;width:100%;margin-left:auto}
+.radar{position:relative;aspect-ratio:1;border-radius:50%;border:1px solid var(--line2);overflow:hidden;
+  background:radial-gradient(circle,rgba(92,255,168,.06),transparent 70%),repeating-radial-gradient(circle,transparent 0 17%,var(--line) 17% calc(17% + 1px))}
+.radar::before,.radar::after{content:"";position:absolute;background:var(--line)}
+.radar::before{left:50%;top:0;bottom:0;width:1px}.radar::after{top:50%;left:0;right:0;height:1px}
+.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(92,255,168,.42),rgba(92,255,168,0) 24%);animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.blip{position:absolute;left:var(--x);top:var(--y);width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--c);box-shadow:0 0 12px var(--c)}
+.blip::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--c);animation:ping 2.6s ease-out infinite;animation-delay:var(--d,0s)}
+@keyframes ping{0%{transform:scale(.4);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+.blip b{position:absolute;left:14px;top:-4px;font:600 9.5px var(--mono);letter-spacing:.1em;color:var(--c);white-space:nowrap}
+.radar-cap{display:flex;justify-content:space-between;margin-top:12px}
+
+/* ---------- telemetry ---------- */
+.telemetry{padding:0 0 18px}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tcell{background:var(--panel);padding:20px 22px}
+.tcell .n{font-size:clamp(34px,4vw,52px);font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-top:8px;font-variant-numeric:tabular-nums}
+.tcell .s{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:4px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--mut)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:baseline}
+
+/* ---------- sections ---------- */
+section.block{padding:64px 0 8px}
+.sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:26px;flex-wrap:wrap}
+.sec-h .idx{font-family:var(--mono);font-size:12px;color:var(--acc);letter-spacing:.14em}
+.sec-h h2{font-size:clamp(28px,3.4vw,44px);letter-spacing:-.03em;font-weight:600}
+.sec-h p{color:var(--mut);max-width:520px;font-size:15px;margin-left:auto}
+
+/* ---------- ops ---------- */
+.ops{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:16px;height:720px}
+[hidden]{display:none!important}
+.viewbody{flex:1;min-height:0;display:flex;flex-direction:column}
+.viewbody #map{flex:1}.viewbody #queueB{flex:1}
+.vtabs{display:flex;gap:6px}
+.vtab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--mut);border:1px solid var(--line2);border-radius:8px;padding:7px 12px;cursor:pointer}
+.vtab:hover{color:var(--ink)}.vtab.on{color:var(--acc);border-color:var(--acc)}
+.hint{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:none;color:var(--dim)}
+.methods{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.method{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:15px 6px;border:1px solid var(--line2);border-radius:12px;background:transparent;color:var(--ink);cursor:pointer;text-align:center}
+.method svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.method:hover{border-color:var(--acc);color:var(--acc)}
+.method.on{background:var(--r);border-color:var(--r);color:#fff;animation:pulse2 1.4s infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 6px rgba(244,63,94,.25)}}
+.btn.big{width:100%;padding:15px 16px;font-size:13px;margin-top:4px}
+details.more{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 12px}
+details.more summary{cursor:pointer;list-style:none;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);padding:11px 0}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"+";float:right;color:var(--acc)}
+details.more[open] summary::after{content:"–"}
+details.more[open]{padding-bottom:12px}
+#progress{list-style:none;display:flex;gap:6px;margin-top:14px}
+#progress li{flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);border-top:2px solid var(--line2);padding-top:7px}
+#progress li.act{color:var(--acc);border-color:var(--acc);animation:blink 1s infinite}
+#progress li.done{color:var(--ink);border-color:var(--acc)}
+@keyframes blink{50%{opacity:.45}}
+.rhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.facts{margin-top:8px}
+.facts div{display:flex;flex-direction:column;gap:2px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.facts div span{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.facts div b{font-weight:500;font-size:13.5px}
+#map{height:100%;min-height:420px;background:#0b1210}
+.dark-tiles{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.55)}
+.leaflet-container{font-family:var(--disp)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#0c110e;color:var(--ink);border:1px solid var(--line2)}
+.leaflet-popup-content{font-size:12.5px;line-height:1.5}
+.leaflet-bar a{background:#0c110e;color:var(--ink);border-color:var(--line2)}
+.leaflet-control-attribution{background:rgba(7,9,8,.8)!important;color:var(--mut)!important}
+.leaflet-control-attribution a{color:var(--mut)!important}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.row .grow{flex:1}
+#status{font-family:var(--mono);font-size:11px;color:var(--mut);min-height:16px}
+.console{margin-top:2px;background:#040605;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:12px/1.75 var(--mono);height:150px;overflow:auto;color:#9fc9b2}
+.console .k{display:inline-block;min-width:62px;color:var(--acc)}
+.console .w{color:var(--o)}
+.console .dim{color:var(--dim)}
+.result{margin-top:14px;border:1px solid var(--line2);border-radius:12px;padding:14px;background:var(--bg2)}
+.result h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.kv{font-size:13px;color:var(--mut);margin-top:6px}.kv b{color:var(--ink);font-weight:500}
+pre.draft{white-space:pre-wrap;word-break:break-word;font:12px/1.6 var(--mono);color:#cfd6d1;background:#050806;border:1px solid var(--line);border-radius:8px;padding:11px;margin:10px 0}
+.held{border-color:#5a1d2b;background:rgba(244,63,94,.07)}
+/* queue */
+.qitem{padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer;position:relative}
+.qitem:hover{background:rgba(92,255,168,.04)}
+.qitem .t{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:500;padding-right:28px}
+.qitem .t span.loc{color:var(--mut);font-weight:400}
+.qitem small{display:block;color:var(--mut);font-size:12px;margin-top:5px;line-height:1.45}
+.qitem .m{font-family:var(--mono);font-size:10.5px;color:var(--acc);margin-top:5px;display:block}
+.flag{position:absolute;right:2px;top:10px;background:transparent;border:1px solid transparent;color:var(--dim);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:13px}
+.flag:hover{color:var(--r);border-color:#5a1d2b}
+
+/* ---------- how it works ---------- */
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.step{background:var(--panel);padding:24px 20px 26px;min-height:220px}
+.step .no{font-family:var(--mono);font-size:12px;color:var(--acc);letter-spacing:.14em}
+.step h3{font-size:19px;margin:34px 0 8px;letter-spacing:-.01em;font-weight:600}
+.step p{font-size:13.5px;color:var(--mut)}
+
+/* ---------- smog + roadmap ---------- */
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.aqrow{display:grid;grid-template-columns:120px 1fr 138px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.aqbar{height:6px;border-radius:4px;background:var(--line);overflow:hidden}.aqbar i{display:block;height:100%;border-radius:4px}
+.aqrow .v{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap}
+.advice{margin-top:16px;padding:12px 14px;border:1px solid var(--line2);border-radius:10px;font-size:13px;color:var(--mut);background:var(--bg2)}
+.advice b{color:var(--o);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px}
+.road{list-style:none}
+.road li{display:flex;gap:14px;padding:13px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.road li span{font-family:var(--mono);font-size:11px;color:var(--acc);padding-top:2px;min-width:28px}
+.note{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:14px;line-height:1.6}
+
+/* ---------- footer ---------- */
+footer{margin-top:80px;border-top:1px solid var(--line);padding:30px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
+
+@media(max-width:1180px){
+  .ops{grid-template-columns:1fr;height:auto}
+  .ops .panel{height:auto}.ops .panel-b{max-height:none}
+  .viewbody{height:auto}.viewbody #map{flex:none;height:440px}.viewbody #queueB{flex:none;max-height:480px}
+}
+@media(max-width:960px){
+  .hero .wrap{grid-template-columns:1fr}.radar-wrap{margin:0 auto;max-width:360px}
+  .tgrid{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}
+  .sys-nav{display:none}.sec-h p{margin-left:0}
+  .hero{padding-top:44px}
+}
+@media(max-width:560px){.hide-sm{display:none}.steps{grid-template-columns:1fr}.sys-left .coords{display:none}.wrap{padding:0 16px}.aqrow{grid-template-columns:90px 1fr 118px}}
+</style>
+</head>
+<body>
+
+<header class="sysbar">
+  <div class="wrap">
+    <div class="sys-left"><span class="dot"></span><b>SYS:ONLINE</b><span class="coords">· 28°38′N 77°13′E · DELHI</span></div>
+    <nav class="sys-nav" aria-label="Sections">
+      <a href="#live">Live</a><a href="#how">How it works</a><a href="#smog">Smog watch</a><a href="#roadmap">Roadmap</a><a href="/admin">Admin</a>
+    </nav>
+    <span class="pill" id="engine" style="margin-left:auto">AI · …</span>
+  </div>
+</header>
+
+<main>
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="deva" aria-hidden="true">दिल्ली</div>
+  <div class="wrap">
+    <div style="position:relative;z-index:1">
+      <div class="hero-meta">
+        <span>Theme <b>Community Well-being</b></span>
+        <span>Region <b>Delhi NCR</b></span>
+        <span>Mode <b>Live triage</b></span>
+      </div>
+      <h1>Report.<br><span class="l2">Route.</span><br><em>Resolve.</em></h1>
+      <p class="lead">Delhi's civic complaints are scattered across MCD, DJB, PWD and WhatsApp groups. <b>Speak, snap or type</b> a problem and AI sorts it, merges the duplicates, writes the complaint and sends it to the right office, so the most urgent issues, and the most vulnerable people, are seen first.</p>
+      <div class="cta">
+        <a class="btn" href="#live">Report an issue ↓</a>
+        <a class="btn ghost" href="#how">How it works</a>
+      </div>
+      <div class="langs"><span class="tag">हिन्दी</span><span class="tag">English</span><span class="tag">Hinglish</span><span class="tag">Voice</span><span class="tag">Photo</span></div>
+    </div>
+    <div class="radar-wrap" aria-hidden="true">
+      <div class="radar">
+        <div class="sweep"></div>
+        <i class="blip" style="--x:66%;--y:30%;--c:#f43f5e"><b>GHAZIPUR</b></i>
+        <i class="blip" style="--x:44%;--y:44%;--c:#fb923c;--d:.6s"><b>MINTO BRIDGE</b></i>
+        <i class="blip" style="--x:30%;--y:58%;--c:#facc15;--d:1.2s"><b>KAROL BAGH</b></i>
+        <i class="blip" style="--x:16%;--y:72%;--c:#4ade80;--d:1.8s"><b>DWARKA</b></i>
+        <i class="blip" style="--x:74%;--y:52%;--c:#f43f5e;--d:.3s"><b>ANAND VIHAR</b></i>
+      </div>
+      <div class="radar-cap"><span class="label">Sweep · 5s</span><span class="label">28.61°N 77.21°E</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TELEMETRY ================= -->
+<section class="telemetry">
+  <div class="wrap">
+    <div class="tgrid">
+      <div class="tcell"><div class="label">Reports</div><div class="n" id="sTotal">0</div><div class="s">received</div></div>
+      <div class="tcell"><div class="label">Unique issues</div><div class="n" id="sClusters">0</div><div class="s">after clustering</div></div>
+      <div class="tcell"><div class="label">Duplicates merged</div><div class="n" id="sMerged">0</div><div class="s">noise removed</div></div>
+      <div class="tcell"><div class="label">Vulnerable cases</div><div class="n" id="sVuln">0</div><div class="s">elderly · children · outdoor workers</div></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--g)"></i>Low</span><span><i style="background:var(--y)"></i>Medium</span><span><i style="background:var(--o)"></i>High</span><span><i style="background:var(--r)"></i>Critical</span>
+      <span style="margin-left:auto;color:var(--dim)">Priority = severity + duplicates + vulnerable people</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LIVE OPS ================= -->
+<section class="block" id="live">
+  <div class="wrap">
+    <div class="sec-h"><span class="idx">// 01</span><h2>Live operations</h2><p>Tell us what's wrong. We handle the rest, then you can see it on the map and in the priority list.</p></div>
+    <div class="ops">
+      <div class="panel">
+        <div class="panel-h"><span><b>STEP 1</b> / Tell us what's wrong</span><span class="hide-sm">HI · EN · HINGLISH</span></div>
+        <div class="panel-b">
+          <label class="sr" for="text">Describe the issue</label>
+          <textarea id="text" rows="4" placeholder="Type here in Hindi, English or Hinglish. Example: Minto Bridge pe paani bhar gaya hai"></textarea>
+          <div class="methods">
+            <button class="method" id="mic" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg><span id="micLabel">Speak</span></button>
+            <label class="method" for="photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Add photo</span></label><input type="file" id="photo" accept="image/*" class="sr">
+            <button class="method" id="loc" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>My location</span></button>
+          </div>
+          <div id="status" aria-live="polite"></div>
+          <button class="btn big" id="send" type="button">Submit report →</button>
+          <ol id="progress" hidden aria-live="polite"><li>Understanding</li><li>Locating</li><li>Routing</li><li>Matching help</li></ol>
+          <div id="result"></div>
+          <details class="more"><summary>Try an example · voice language</summary>
+            <div class="row" id="examples"></div>
+            <select id="lang" aria-label="Voice language"><option value="hi-IN">Voice: Hindi</option><option value="en-IN">Voice: English (India)</option></select>
+          </details>
+          <details class="more"><summary>See what the AI did</summary>
+            <div class="console" id="console" aria-live="polite"><div class="dim">&gt; nothing yet. Submit a report.</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">
+          <div class="vtabs" role="tablist"><button class="vtab on" data-v="map" type="button" role="tab">Map</button><button class="vtab" data-v="list" type="button" role="tab">Priority list <span id="qcount"></span></button></div>
+          <span class="hint" id="viewHint">Tip: tap the map to set the location</span>
+        </div>
+        <div class="viewbody">
+          <div id="map"></div>
+          <div class="panel-b" id="queueB" hidden><div id="queue"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW ================= -->
+<section class="block" id="how">
+  <div class="wrap">
+    <div class="sec-h"><span class="idx">// 02</span><h2>How it works</h2><p>Five steps from a shaky voice note to the right desk.</p></div>
+    <div class="steps">
+      <div class="step"><div class="no">01</div><h3>Capture</h3><p>Voice, photo or text, in Hindi, English or Hinglish. Location by GPS or a tap on the map.</p></div>
+      <div class="step"><div class="no">02</div><h3>Understand</h3><p>AI reads the report (and the photo) to find the issue type, severity, locality and whether vulnerable people are at risk.</p></div>
+      <div class="step"><div class="no">03</div><h3>Cluster</h3><p>Reports of the same problem within 700 m merge into one, and the pile-up raises its priority.</p></div>
+      <div class="step"><div class="no">04</div><h3>Route</h3><p>Matched to the right body (MCD, DJB, PWD, DPCC, RWA or NGO), with a formal complaint already drafted for the citizen to send.</p></div>
+      <div class="step"><div class="no">05</div><h3>Match</h3><p>Nearby volunteers with the right skill are suggested, so help can start before the office responds.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SMOG + ROADMAP ================= -->
+<section class="block" id="smog">
+  <div class="wrap">
+    <div class="sec-h"><span class="idx">// 03</span><h2>Smog watch</h2><p>October to November is Delhi's worst air. Vulnerable groups get plain-language advice by locality.</p></div>
+    <div class="two">
+      <div class="panel"><div class="panel-h"><span><b>AQI</b> / Most affected</span><span>Simulated sample</span></div>
+        <div class="panel-b"><div id="aqi"></div><div class="advice" id="advice"></div></div></div>
+      <div class="panel" id="roadmap"><div class="panel-h"><span><b>Next</b> / Roadmap</span><span>Beyond the prototype</span></div>
+        <div class="panel-b">
+          <ul class="road">
+            <li><span>01</span>WhatsApp bot intake, since that is where Delhi already complains</li>
+            <li><span>02</span>Live CPCB / OpenAQ air-quality feed in place of the sample values</li>
+            <li><span>03</span>Direct submission to official grievance portals</li>
+            <li><span>04</span>Resolution tracking, so residents see when an issue is closed</li>
+            <li><span>05</span>Ward-level analytics for officials and NGOs</li>
+          </ul>
+          <div class="note">ABOUT THE DATA: seeded reports, volunteers and AQI values are illustrative sample data for this prototype.</div>
+        </div></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Delhi Community Radar · Community Well-being</span>
+    <span>28°38′N 77°13′E</span>
+    <a href="/admin">Admin console →</a>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sevOf=p=>p>=80?'r':p>=60?'o':p>=40?'y':'g';
+const COL={r:'#f43f5e',o:'#fb923c',y:'#facc15',g:'#4ade80'};
+const colorFor=p=>COL[sevOf(p)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let map,layer,pick,coords=null,photoFile=null,qrows=[],firstLoad=true;
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2600)}
+function countUp(el,to){const from=+el.textContent||0;if(from===to){el.textContent=to;return}const t0=performance.now();const step=t=>{const k=Math.min(1,(t-t0)/700);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+
+/* ---------- map ---------- */
+map=L.map('map',{zoomControl:true}).setView([28.6139,77.2090],11);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,className:'dark-tiles',attribution:'© OpenStreetMap contributors'}).addTo(map);
+layer=L.layerGroup().addTo(map);
+map.on('click',e=>{coords=e.latlng;if(pick)map.removeLayer(pick);pick=L.circleMarker(e.latlng,{radius:8,color:'#5cffa8',weight:2,fillOpacity:0}).addTo(map);$('status').textContent='Location set from the map'});
+
+/* ---------- inputs ---------- */
+const EX=["Minto Bridge pe paani bhar gaya hai, gaadiyan phans gayi","Karol Bagh mein bujurg akele hain, tabiyat kharab, medicine chahiye","Garbage not collected 5 days near Okhla, bad smell","Dwarka streetlight kharab hai, raat ko andhera"];
+$('examples').innerHTML=EX.map((e,i)=>`<button type="button" class="chip" data-i="${i}">${esc(e.slice(0,30))}…</button>`).join('');
+$('examples').onclick=e=>{const c=e.target.closest('.chip');if(c)$('text').value=EX[c.dataset.i]};
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+$('mic').onclick=()=>{
+  if(!SR){toast('Voice works in Chrome. Type your report instead.');return}
+  if(rec){rec.stop();return}
+  rec=new SR();rec.lang=$('lang').value;rec.interimResults=true;rec.continuous=true;
+  rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;$('text').value=t};
+  rec.onerror=()=>{$('status').textContent='Microphone blocked or unavailable.'};
+  rec.onend=()=>{rec=null;$('micLabel').textContent='Speak';$('mic').classList.remove('on')};
+  rec.start();$('micLabel').textContent='Stop';$('mic').classList.add('on');$('status').textContent='Listening… speak in Hindi, English or Hinglish';
+};
+$('photo').onchange=e=>{photoFile=e.target.files[0]||null;$('status').textContent=photoFile?`Photo added: ${photoFile.name}`:''};
+$('loc').onclick=()=>{
+  if(!navigator.geolocation){toast('Location not supported. Tap the map instead.');return}
+  navigator.geolocation.getCurrentPosition(p=>{coords={lat:p.coords.latitude,lng:p.coords.longitude};$('status').textContent='Using your current location'},()=>toast('Location blocked. Tap the map instead.'));
+};
+
+/* ---------- console + result ---------- */
+function logLine(tag,msg,cls=''){const c=$('console');const d=document.createElement('div');d.innerHTML=`<span class="k ${cls}">${esc(tag)}</span> ${esc(msg)}`;c.appendChild(d);c.scrollTop=c.scrollHeight}
+function setStep(k){document.querySelectorAll('#progress li').forEach((li,i)=>{li.className=i<k?'done':i===k?'act':''})}
+async function runConsole(r){
+  $('console').innerHTML='';
+  const vols=(r.volunteers||[]).map(v=>v.name).join(', ')||'none nearby';
+  const lines=[['parse',`language=${r.language}`,0],['vision',r.has_photo?'photo analysed':'no photo attached',0],['class',`${r.category} · severity ${r.severity}/5`,0],
+    ['geo',`${r.locality} (${(+r.lat).toFixed(4)}, ${(+r.lng).toFixed(4)})`,1],['cluster',r.cluster_size>1?`merged with ${r.cluster_size-1} similar report(s)`:'new unique issue',1],
+    ['risk',`vulnerable people: ${r.vulnerable_people?'YES':'no'}`,2],['route',`→ ${r.authority}`,2],['match',vols,3],['done',`priority ${r.priority}/100 · engine ${r.engine}`,3]];
+  for(const [k,v,st] of lines){setStep(st);logLine(k,v,k==='risk'&&r.vulnerable_people?'w':'');await sleep(170)}
+  setStep(4);
+}
+function showResult(r){
+  const vols=r.volunteers||[];
+  $('result').innerHTML=`<div class="result">
+    <div class="rhead"><span class="badge sev-${sevOf(r.priority)}">PRIORITY ${esc(r.priority)}</span><span class="label">${esc(r.category)} · ${esc(r.locality)}</span></div>
+    <h3 style="margin-top:10px">Thanks, your report is in.</h3>
+    <div class="facts">
+      <div><span>Route to</span><b>${esc(r.authority)}</b></div>
+      <div><span>Help nearby</span><b>${vols.length?esc(vols.map(v=>v.name+' ('+v.distance_km+' km)').join(', ')):'No volunteers matched yet'}</b></div>
+      <div><span>Next step</span><b>${esc(r.suggested_action)}</b></div>
+      ${r.cluster_size>1?`<div><span>Duplicates</span><b>Merged with ${esc(r.cluster_size-1)} similar report(s)</b></div>`:''}
+    </div>
+    <details class="more"><summary>View drafted complaint</summary>
+      <pre class="draft" id="draft">${esc(r.complaint_draft)}</pre>
+      <button class="btn ghost sm" type="button" id="copy">Copy complaint</button></details>
+  </div>`;
+  $('copy').onclick=function(){navigator.clipboard.writeText($('draft').innerText).then(()=>{this.textContent='Copied ✓'},()=>toast('Copy failed. Select the text manually.'))};
+}
+
+$('send').onclick=async()=>{
+  if(!$('text').value.trim()&&!photoFile){toast('Describe the issue or attach a photo first.');return}
+  const fd=new FormData();fd.append('text',$('text').value);
+  if(coords){fd.append('lat',coords.lat);fd.append('lng',coords.lng)}
+  if(photoFile)fd.append('photo',photoFile);
+  $('send').textContent='Working on it…';$('send').disabled=true;$('result').innerHTML='';$('progress').hidden=false;setStep(0);
+  $('console').innerHTML='';logLine('recv','report received','dim');
+  try{
+    const res=await fetch('/api/report',{method:'POST',body:fd});
+    const r=await res.json();
+    if(r.error){logLine('error',r.error,'w')}
+    else if(r.flagged){
+      logLine('mod','held for admin review','w');$('progress').hidden=true;
+      $('result').innerHTML=`<div class="result held"><h3>Held for review</h3><div class="kv">Your report was flagged by moderation (<b>${esc(r.flag_reason)}</b>) and will not be published unless an admin approves it.</div></div>`;
+    }else{await runConsole(r);showResult(r)}
+    $('result').scrollIntoView({block:'nearest',behavior:'smooth'});
+    $('text').value='';photoFile=null;coords=null;$('photo').value='';$('status').textContent='';
+    if(pick){map.removeLayer(pick);pick=null}
+    showView('map');
+    await refresh(r&&r.lat&&!r.flagged?[r.lat,r.lng]:null);
+  }catch(e){logLine('error','something went wrong. Try again.','w');$('progress').hidden=true;toast('Something went wrong. Please try again.')}
+  $('send').textContent='Submit report →';$('send').disabled=false;
+};
+
+/* ---------- data ---------- */
+function showView(v){
+  document.querySelectorAll('.vtab').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  $('map').hidden=v!=='map';$('queueB').hidden=v!=='list';
+  $('viewHint').textContent=v==='map'?'Tip: tap the map to set the location':'Most urgent first · ⚑ flags offensive reports';
+  if(v==='map')setTimeout(()=>map.invalidateSize(),60);
+}
+document.querySelector('.vtabs').onclick=e=>{const b=e.target.closest('.vtab');if(b)showView(b.dataset.v)};
+async function flagAbuse(id){
+  try{await fetch(`/api/report/${encodeURIComponent(id)}/abuse`,{method:'POST'});toast('Thanks. Flagged for admin review.');await refresh()}catch(e){toast('Could not flag. Try again.')}
+}
+async function refresh(focus){
+  const [rs,st]=await Promise.all([fetch('/api/reports').then(r=>r.json()),fetch('/api/stats').then(r=>r.json())]);
+  countUp($('sTotal'),st.total);countUp($('sClusters'),st.clusters);countUp($('sMerged'),st.duplicates_merged);countUp($('sVuln'),st.vulnerable);
+  $('engine').textContent='AI · '+(String(st.ai_engine).startsWith('Claude')?'Claude':'Demo mode');
+  layer.clearLayers();
+  st.areas.forEach(a=>{const c=colorFor(Math.min(100,a.score));L.circle([a.lat,a.lng],{radius:350+a.score*14,color:c,fillColor:c,fillOpacity:.14,weight:1}).addTo(layer)});
+  rs.forEach(r=>{
+    const m=L.circleMarker([r.lat,r.lng],{radius:6+r.severity*1.5,color:'#070908',weight:1.5,fillColor:colorFor(r.priority),fillOpacity:.95}).addTo(layer);
+    m.bindPopup(`<b>${esc(r.category)}</b><br>${esc(r.summary)}<br><small style="color:#8c9a92">${esc(r.locality)} · priority ${esc(r.priority)} · ${esc(r.cluster_size)} report(s)<br>→ ${esc(r.authority)}</small>`);
+  });
+  const seen=new Set();qrows=rs.filter(r=>!seen.has(r.cluster_id)&&seen.add(r.cluster_id)).slice(0,10);
+  $('qcount').textContent=qrows.length?`(${qrows.length})`:'';
+  $('queue').innerHTML=qrows.map((r,i)=>`<div class="qitem" data-i="${i}">
+    <div class="t"><span class="badge sev-${sevOf(r.priority)}">${esc(r.priority)}</span>${esc(r.category)}</div>
+    <span class="m" style="color:var(--mut);margin-top:3px">${esc(String(r.locality).toUpperCase())}</span>
+    <button class="flag" type="button" data-id="${esc(r.id)}" title="Flag as offensive or spam" aria-label="Flag report as offensive">⚑</button>
+    <small>${esc(r.summary.slice(0,90))}${r.summary.length>90?'…':''}</small>
+    ${(r.cluster_size>1||r.vulnerable_people)?`<span class="m">${r.cluster_size>1?esc(r.cluster_size)+' reports merged':''}${r.cluster_size>1&&r.vulnerable_people?' · ':''}${r.vulnerable_people?'<b style="color:var(--o);font-weight:600">vulnerable people at risk</b>':''}</span>`:''}</div>`).join('');
+  if(focus)map.setView(focus,13);
+}
+$('queue').onclick=e=>{
+  const f=e.target.closest('.flag');if(f){e.stopPropagation();flagAbuse(f.dataset.id);return}
+  const q=e.target.closest('.qitem');if(q){const r=qrows[q.dataset.i];showView('map');map.setView([r.lat,r.lng],14);document.getElementById('map').scrollIntoView({block:'nearest'})}
+};
+
+async function loadAqi(){
+  const a=await fetch('/api/aqi').then(r=>r.json());
+  const bandCol=v=>v>400?'#f43f5e':v>300?'#fb923c':v>200?'#facc15':'#4ade80';
+  $('aqi').innerHTML=a.data.slice(0,7).map(x=>`<div class="aqrow"><span>${esc(x.locality)}</span><div class="aqbar"><i style="width:${Math.min(100,x.aqi/5)}%;background:${bandCol(x.aqi)}"></i></div><span class="v" style="color:${bandCol(x.aqi)}">${esc(x.aqi)} · ${esc(x.band)}</span></div>`).join('');
+  $('advice').innerHTML=`<b>Advisory</b>${esc(a.data[0].advisory)}`;
+}
+refresh().catch(()=>toast('Could not load reports. Is the server running?'));loadAqi().catch(()=>{});
+</script>
+</body>
+</html>
