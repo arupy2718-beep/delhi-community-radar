@@ -10,7 +10,7 @@ cd path\to\delhi-community-radar        # the folder that contains app.py
 python -m pip install -r requirements.txt
 python -m uvicorn app:app --reload
 ```
-Open http://127.0.0.1:8000 in Chrome (voice input needs Chrome). Admin console: http://127.0.0.1:8000/admin
+Open (https://delhi-community-radar.onrender.com) in Chrome 
 
 Optional settings (set them before the last command, in the same window):
 ```powershell
@@ -44,8 +44,7 @@ Priority = severity x 12 + 8 per merged duplicate + 15 if vulnerable people are 
 2. render.com -> New -> Web Service -> pick the repo
 3. Build command: `pip install -r requirements.txt`
 4. Start command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-5. Environment variables: `ADMIN_PASSWORD` (required), `ANTHROPIC_API_KEY` (optional)
-6. Open the public URL once before judges do (the free tier sleeps)
+5. Open the public URL once before judges do (the free tier sleeps)
 
 ## 3-minute demo script
 1. (20s) Problem: scattered complaints, duplicates, slow help
