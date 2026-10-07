@@ -438,7 +438,13 @@ def aqi():
             out.append({"locality": loc, "lat": LOCALITIES[loc][0], "lng": LOCALITIES[loc][1],
                         "aqi": x["aqi"], "band": label, "sev": sev, "advisory": adv, "pm25": x["pm25"]})
         out.sort(key=lambda x: -x["aqi"])
-        return {"simulated": False, "source": "Open-Meteo air quality model (US AQI)",
+        # The model grid is ~10 km, so nearby areas share one value: group them into zones.
+        zones = {}
+        for o in out:
+            zones.setdefault((o["aqi"], o["band"]), {"aqi": o["aqi"], "band": o["band"], "sev": o["sev"],
+                                                     "advisory": o["advisory"], "areas": []})["areas"].append(o["locality"])
+        zl = sorted(zones.values(), key=lambda z: -z["aqi"])
+        return {"simulated": False, "zones": zl, "source": "Open-Meteo air quality model (US AQI), about 10 km resolution",
                 "updated": live[0].get("time"), "data": out}
     for loc, v in AQI_BASE.items():
         v = v + random.randint(-12, 12)
