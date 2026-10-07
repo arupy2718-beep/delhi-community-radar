@@ -128,7 +128,8 @@ pre.draft{white-space:pre-wrap;word-break:break-word;font:12px/1.6 var(--mono);c
 
 /* ---------- smog + roadmap ---------- */
 .two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
-.aqrow{display:grid;grid-template-columns:120px 1fr 138px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.aqrow{display:grid;grid-template-columns:170px 1fr 138px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.aqrow>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .aqbar{height:6px;border-radius:4px;background:var(--line);overflow:hidden}.aqbar i{display:block;height:100%;border-radius:4px}
 .aqrow .v{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap}
 .advice{margin-top:16px;padding:12px 14px;border:1px solid var(--line2);border-radius:10px;font-size:13px;color:var(--mut);background:var(--bg2)}
@@ -155,7 +156,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
   .sys-nav{display:none}.sec-h p{margin-left:0}
   .hero{padding-top:44px}
 }
-@media(max-width:560px){.hide-sm{display:none}.steps{grid-template-columns:1fr}.sys-left .coords{display:none}.wrap{padding:0 16px}.aqrow{grid-template-columns:90px 1fr 118px}}
+@media(max-width:560px){.hide-sm{display:none}.steps{grid-template-columns:1fr}.sys-left .coords{display:none}.wrap{padding:0 16px}.aqrow{grid-template-columns:110px 1fr 118px}}
 </style>
 </head>
 <body>
@@ -441,9 +442,10 @@ $('queue').onclick=e=>{
 async function loadAqi(){
   const a=await fetch('/api/aqi').then(r=>r.json());
   const cols=['#4ade80','#facc15','#fb923c','#f43f5e','#f43f5e'];const bandCol=(v,x)=>cols[x&&x.sev!=null?x.sev:0];
-  $('aqsrc').textContent=a.simulated?'Simulated sample':'Live · US AQI';$('aqsrc').title=a.source||'';
-  $('aqi').innerHTML=a.data.slice(0,7).map(x=>`<div class="aqrow"><span>${esc(x.locality)}</span><div class="aqbar"><i style="width:${Math.min(100,x.aqi/5)}%;background:${bandCol(x.aqi,x)}"></i></div><span class="v" style="color:${bandCol(x.aqi,x)}">${esc(x.aqi)} · ${esc(x.band)}</span></div>`).join('');
-  $('advice').innerHTML=`<b>Advisory</b>${esc(a.data[0].advisory)}`;
+  $('aqsrc').textContent=a.simulated?'Simulated sample':'Live · modelled · US AQI';$('aqsrc').title=a.source||'';
+  const rows=a.zones?a.zones.slice(0,7).map(z=>({name:z.areas.length>2?z.areas.slice(0,2).join(', ')+' +'+(z.areas.length-2):z.areas.join(', '),title:z.areas.join(', '),aqi:z.aqi,band:z.band,sev:z.sev,advisory:z.advisory})):a.data.slice(0,7).map(x=>({name:x.locality,title:x.locality,aqi:x.aqi,band:x.band,sev:x.sev,advisory:x.advisory}));
+  $('aqi').innerHTML=rows.map(x=>`<div class="aqrow"><span title="${esc(x.title)}">${esc(x.name)}</span><div class="aqbar"><i style="width:${Math.min(100,x.aqi/5)}%;background:${bandCol(x.aqi,x)}"></i></div><span class="v" style="color:${bandCol(x.aqi,x)}">${esc(x.aqi)} · ${esc(x.band)}</span></div>`).join('');
+  $('advice').innerHTML=`<b>Advisory</b>${esc(rows[0].advisory)}`+(a.zones?'<br><span style="font-size:11px;opacity:.7">Modelled air quality, about 10 km resolution. Nearby areas share one value. Not a ground-station reading.</span>':'');
 }
 refresh().catch(()=>toast('Could not load reports. Is the server running?'));loadAqi().catch(()=>{});
 </script>
