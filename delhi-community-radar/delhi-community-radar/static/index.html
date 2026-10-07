@@ -281,7 +281,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
   <div class="wrap">
     <div class="sec-h"><span class="idx">// 03</span><h2>Smog watch</h2><p>October to November is Delhi's worst air. Vulnerable groups get plain-language advice by locality.</p></div>
     <div class="two">
-      <div class="panel"><div class="panel-h"><span><b>AQI</b> / Most affected</span><span>Simulated sample</span></div>
+      <div class="panel"><div class="panel-h"><span><b>AQI</b> / Most affected</span><span id="aqsrc">Loading…</span></div>
         <div class="panel-b"><div id="aqi"></div><div class="advice" id="advice"></div></div></div>
       <div class="panel" id="roadmap"><div class="panel-h"><span><b>Next</b> / Roadmap</span><span>Beyond the prototype</span></div>
         <div class="panel-b">
@@ -440,8 +440,9 @@ $('queue').onclick=e=>{
 
 async function loadAqi(){
   const a=await fetch('/api/aqi').then(r=>r.json());
-  const bandCol=v=>v>400?'#f43f5e':v>300?'#fb923c':v>200?'#facc15':'#4ade80';
-  $('aqi').innerHTML=a.data.slice(0,7).map(x=>`<div class="aqrow"><span>${esc(x.locality)}</span><div class="aqbar"><i style="width:${Math.min(100,x.aqi/5)}%;background:${bandCol(x.aqi)}"></i></div><span class="v" style="color:${bandCol(x.aqi)}">${esc(x.aqi)} · ${esc(x.band)}</span></div>`).join('');
+  const cols=['#4ade80','#facc15','#fb923c','#f43f5e','#f43f5e'];const bandCol=(v,x)=>cols[x&&x.sev!=null?x.sev:0];
+  $('aqsrc').textContent=a.simulated?'Simulated sample':'Live · US AQI';$('aqsrc').title=a.source||'';
+  $('aqi').innerHTML=a.data.slice(0,7).map(x=>`<div class="aqrow"><span>${esc(x.locality)}</span><div class="aqbar"><i style="width:${Math.min(100,x.aqi/5)}%;background:${bandCol(x.aqi,x)}"></i></div><span class="v" style="color:${bandCol(x.aqi,x)}">${esc(x.aqi)} · ${esc(x.band)}</span></div>`).join('');
   $('advice').innerHTML=`<b>Advisory</b>${esc(a.data[0].advisory)}`;
 }
 refresh().catch(()=>toast('Could not load reports. Is the server running?'));loadAqi().catch(()=>{});
