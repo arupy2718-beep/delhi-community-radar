@@ -382,18 +382,74 @@ def stats():
             "ai_engine": "Claude" if API_KEY else "Rule-based fallback (set ANTHROPIC_API_KEY for full AI)"}
 
 
+_AQI_CACHE = {"t": 0, "data": None}
+
+
+def live_aqi():
+    """Free live air quality from Open-Meteo (no API key). US AQI scale. Cached 15 min.
+    Returns a list or None if the service cannot be reached."""
+    if _AQI_CACHE["data"] and time.time() - _AQI_CACHE["t"] < 900:
+        return _AQI_CACHE["data"]
+    try:
+        import urllib.request
+        names = list(AQI_BASE.keys())
+        lats = ",".join(str(LOCALITIES[n][0]) for n in names)
+        lngs = ",".join(str(LOCALITIES[n][1]) for n in names)
+        url = ("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%s&longitude=%s"
+               "&current=us_aqi,pm2_5&timezone=Asia%%2FKolkata" % (lats, lngs))
+        with urllib.request.urlopen(url, timeout=8) as resp:
+            j = json.loads(resp.read().decode())
+        if isinstance(j, dict):
+            j = [j]
+        out = []
+        for n, item in zip(names, j):
+            cur = item.get("current") or {}
+            v = cur.get("us_aqi")
+            if v is None:
+                continue
+            out.append({"locality": n, "aqi": int(round(v)), "pm25": cur.get("pm2_5"), "time": cur.get("time")})
+        if out:
+            _AQI_CACHE.update(t=time.time(), data=out)
+            return out
+    except Exception as e:
+        print("Live AQI unavailable, using simulated values:", e)
+    return None
+
+
+def us_band(v: int):
+    """Returns (label, severity 0-4) on the US AQI scale."""
+    if v > 300: return "Hazardous", 4
+    if v > 200: return "Very Unhealthy", 3
+    if v > 150: return "Unhealthy", 2
+    if v > 100: return "Unhealthy for sensitive", 1
+    return "Moderate or better", 0
+
+
 @app.get("/api/aqi")
 def aqi():
+    live = live_aqi()
     out = []
+    if live:
+        for x in live:
+            loc = x["locality"]
+            label, sev = us_band(x["aqi"])
+            adv = ("Elderly, children & outdoor workers: stay indoors, wear N95, avoid morning walks."
+                   if x["aqi"] > 150 else "Sensitive groups should limit prolonged outdoor activity.")
+            out.append({"locality": loc, "lat": LOCALITIES[loc][0], "lng": LOCALITIES[loc][1],
+                        "aqi": x["aqi"], "band": label, "sev": sev, "advisory": adv, "pm25": x["pm25"]})
+        out.sort(key=lambda x: -x["aqi"])
+        return {"simulated": False, "source": "Open-Meteo air quality model (US AQI)",
+                "updated": live[0].get("time"), "data": out}
     for loc, v in AQI_BASE.items():
         v = v + random.randint(-12, 12)
         band = aqi_band(v)
+        sev = 4 if v > 400 else 3 if v > 300 else 2 if v > 200 else 0
         adv = ("Elderly, children & outdoor workers: stay indoors, wear N95, avoid morning walks."
                if v > 300 else "Sensitive groups should limit prolonged outdoor activity.")
         out.append({"locality": loc, "lat": LOCALITIES[loc][0], "lng": LOCALITIES[loc][1],
-                    "aqi": v, "band": band, "advisory": adv})
+                    "aqi": v, "band": band, "sev": sev, "advisory": adv})
     out.sort(key=lambda x: -x["aqi"])
-    return {"simulated": True, "data": out}
+    return {"simulated": True, "source": "Simulated sample (live feed unreachable)", "data": out}
 
 
 # ----------------------------------------------------------------- public abuse flag
