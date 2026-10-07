@@ -157,6 +157,14 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
   .hero{padding-top:44px}
 }
 @media(max-width:560px){.hide-sm{display:none}.steps{grid-template-columns:1fr}.sys-left .coords{display:none}.wrap{padding:0 16px}.aqrow{grid-template-columns:110px 1fr 118px}}
+
+/* page navigation: one page at a time */
+[data-page]{display:none}
+body[data-p="home"] [data-page="home"],body[data-p="live"] [data-page="live"],body[data-p="how"] [data-page="how"],body[data-p="smog"] [data-page="smog"]{display:block}
+.sys-nav a.on{color:var(--acc)}
+.sys-nav{display:flex!important;gap:4px;overflow-x:auto;white-space:nowrap}
+@media(max-width:700px){.sys-left .coords{display:none}.sys-nav{gap:12px;font-size:12px}#engine{display:none}}
+main{min-height:70vh}
 </style>
 </head>
 <body>
@@ -165,7 +173,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
   <div class="wrap">
     <div class="sys-left"><span class="dot"></span><b>SYS:ONLINE</b><span class="coords">· 28°38′N 77°13′E · DELHI</span></div>
     <nav class="sys-nav" aria-label="Sections">
-      <a href="#live">Live</a><a href="#how">How it works</a><a href="#smog">Smog watch</a><a href="#roadmap">Roadmap</a><a href="/admin">Admin</a>
+      <a href="#home" data-n="home">Home</a><a href="#live" data-n="live">Report &amp; map</a><a href="#how" data-n="how">How it works</a><a href="#smog" data-n="smog">Smog &amp; roadmap</a><a href="/admin">Admin</a>
     </nav>
     <span class="pill" id="engine" style="margin-left:auto">AI · …</span>
   </div>
@@ -173,7 +181,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
 
 <main>
 <!-- ================= HERO ================= -->
-<section class="hero">
+<section class="hero" data-page="home">
   <div class="deva" aria-hidden="true">दिल्ली</div>
   <div class="wrap">
     <div style="position:relative;z-index:1">
@@ -185,7 +193,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
       <h1>Report.<br><span class="l2">Route.</span><br><em>Resolve.</em></h1>
       <p class="lead">Delhi's civic complaints are scattered across MCD, DJB, PWD and WhatsApp groups. <b>Speak, snap or type</b> a problem and AI sorts it, merges the duplicates, writes the complaint and sends it to the right office, so the most urgent issues, and the most vulnerable people, are seen first.</p>
       <div class="cta">
-        <a class="btn" href="#live">Report an issue ↓</a>
+        <a class="btn" href="#live">Report an issue →</a>
         <a class="btn ghost" href="#how">How it works</a>
       </div>
       <div class="langs"><span class="tag">हिन्दी</span><span class="tag">English</span><span class="tag">Hinglish</span><span class="tag">Voice</span><span class="tag">Photo</span></div>
@@ -205,7 +213,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
 </section>
 
 <!-- ================= TELEMETRY ================= -->
-<section class="telemetry">
+<section class="telemetry" data-page="home">
   <div class="wrap">
     <div class="tgrid">
       <div class="tcell"><div class="label">Reports</div><div class="n" id="sTotal">0</div><div class="s">received</div></div>
@@ -221,7 +229,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
 </section>
 
 <!-- ================= LIVE OPS ================= -->
-<section class="block" id="live">
+<section class="block" id="live" data-page="live">
   <div class="wrap">
     <div class="sec-h"><span class="idx">// 01</span><h2>Live operations</h2><p>Tell us what's wrong. We handle the rest, then you can see it on the map and in the priority list.</p></div>
     <div class="ops">
@@ -264,7 +272,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
 </section>
 
 <!-- ================= HOW ================= -->
-<section class="block" id="how">
+<section class="block" id="how" data-page="how">
   <div class="wrap">
     <div class="sec-h"><span class="idx">// 02</span><h2>How it works</h2><p>Five steps from a shaky voice note to the right desk.</p></div>
     <div class="steps">
@@ -278,7 +286,7 @@ footer a{color:var(--mut);text-decoration:none}footer a:hover{color:var(--acc)}
 </section>
 
 <!-- ================= SMOG + ROADMAP ================= -->
-<section class="block" id="smog">
+<section class="block" id="smog" data-page="smog">
   <div class="wrap">
     <div class="sec-h"><span class="idx">// 03</span><h2>Smog watch</h2><p>October to November is Delhi's worst air. Vulnerable groups get plain-language advice by locality.</p></div>
     <div class="two">
@@ -447,6 +455,18 @@ async function loadAqi(){
   $('aqi').innerHTML=rows.map(x=>`<div class="aqrow"><span title="${esc(x.title)}">${esc(x.name)}</span><div class="aqbar"><i style="width:${Math.min(100,x.aqi/5)}%;background:${bandCol(x.aqi,x)}"></i></div><span class="v" style="color:${bandCol(x.aqi,x)}">${esc(x.aqi)} · ${esc(x.band)}</span></div>`).join('');
   $('advice').innerHTML=`<b>Advisory</b>${esc(rows[0].advisory)}`+(a.zones?'<br><span style="font-size:11px;opacity:.7">Modelled air quality, about 10 km resolution. Nearby areas share one value. Not a ground-station reading.</span>':'');
 }
+
+/* hash router */
+function route(){
+  let p=(location.hash||'#home').slice(1);if(p==='roadmap')p='smog';
+  if(!['home','live','how','smog'].includes(p))p='home';
+  document.body.dataset.p=p;
+  document.querySelectorAll('.sys-nav a[data-n]').forEach(a=>a.classList.toggle('on',a.dataset.n===p));
+  const on=document.querySelector('.sys-nav a.on');if(on&&on.scrollIntoView)on.scrollIntoView({inline:'center',block:'nearest'});
+  window.scrollTo(0,0);
+  if(p==='live'&&typeof map!=='undefined')setTimeout(()=>map.invalidateSize(),80);
+}
+window.addEventListener('hashchange',route);route();
 refresh().catch(()=>toast('Could not load reports. Is the server running?'));loadAqi().catch(()=>{});
 </script>
 </body>
