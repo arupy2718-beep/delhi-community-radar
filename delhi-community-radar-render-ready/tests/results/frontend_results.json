@@ -1,0 +1,306 @@
+[
+ {
+  "id": "F-01a",
+  "name": "Misleading phrases removed from page HTML",
+  "expected": "none present",
+  "actual": "none",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-01b",
+  "name": "Hero + meta state the resident reviews and submits; nothing auto-sent",
+  "expected": "phrases present",
+  "actual": "meta ok=true; hero ok=true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-01c",
+  "name": "Headline no longer promises \"Resolve\"",
+  "expected": "Report.Prioritise.Prepare. (line breaks)",
+  "actual": "Report.Prioritise.Prepare.",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-01d",
+  "name": "Routing feature kept, reworded (How-it-works)",
+  "expected": "\"Suggest authority\" step present",
+  "actual": "04Suggest authorityAI identifies the relevant body (MCD, DJB, PWD, DPCC, RWA or NGO) and prepares a formal complaint dra",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-03",
+  "name": "Emergency notice in reporting panel AND footer, role=note, exact wording",
+  "expected": "both exact",
+  "actual": "panel=true footer=true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-04a",
+  "name": "Consent notice covers location, photo/description use, vulnerable people, avoiding unneeded personal data",
+  "expected": "all four topics + checkbox",
+  "actual": "true,true,true,true,true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-02a",
+  "name": "Volunteer step in How-it-works says SAMPLE / none contacted",
+  "expected": "present",
+  "actual": "true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-09",
+  "name": "Dashboard shows the real API values (16/14/2/4) and hides loader",
+  "expected": "16/14/2/4, loader hidden",
+  "actual": "16/14/2/4 loaderHidden=true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-09b",
+  "name": "Loading indicator shown before data arrives",
+  "expected": "\"Loading statistics…\" visible initially",
+  "actual": "Loading statistics…",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-10",
+  "name": "Stats API 500: counters show \"–\" (NOT 0); error + Retry shown",
+  "expected": "–,–,–,–; error; retry button",
+  "actual": "–,–,–,– | Statistics could not be loaded: x. Retry",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-11",
+  "name": "Retry button recovers the dashboard",
+  "expected": "16/14/2/4, error gone",
+  "actual": "16/14/2/4 hidden=true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-10b",
+  "name": "Stats request that never answers times out with a message (no endless spinner)",
+  "expected": "timeout error + retry, counters \"–\"",
+  "actual": "Statistics could not be loaded: The server took too long to answer (timeout). Retry | total=–",
+  "result": "PASS",
+  "evidence": "timeouts time-scaled 400x for the test"
+ },
+ {
+  "id": "F-10c",
+  "name": "Backend unreachable (network error): clear message, no fake zeros",
+  "expected": "\"Could not reach the server\"",
+  "actual": "Statistics could not be loaded: Could not reach the server. Retry",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-10d",
+  "name": "Later refresh failure keeps last real values and warns",
+  "expected": "16 kept + \"last values from\"",
+  "actual": "16 | Statistics could not be refreshed (Server error (500)). Showing the last values from 10:42 AM. Retry",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-05",
+  "name": "AQI success (live): source named, \"Not a CPCB\" shown, rows rendered",
+  "expected": "Live · Open-Meteo model",
+  "actual": "Live · Open-Meteo model | Open-Meteo model estimate (US AQI scale, ~10 km grid, nearby areas share one value). Not a CPCB station reading. Model time 2026-11-24 14:00 IST. Checked 10:42 AM. Refres rows=4",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-06",
+  "name": "AQI request hangs: times out, NOT stuck on Loading, retry offered, no values shown",
+  "expected": "Unavailable + timeout + retry",
+  "actual": "Unavailable | Air-quality data could not be loaded: The server took too long to answer (timeout). No values are shown rather than showing wrong ones. Retry",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-07",
+  "name": "AQI API failure shows error; Retry then loads data",
+  "expected": "error then Live rows",
+  "actual": "Air-quality data could not be loaded: x. No values are shown => Live · Open-Meteo model",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-08",
+  "name": "Simulated fallback is unmistakably labelled (badge, banner, per-row \"sim\")",
+  "expected": "SIMULATED badge + \"not measurements\"",
+  "actual": "SIMULATED | SIMULATED values, not measurements. The live air-quality service could not be reached, so these numbers are il",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-08b",
+  "name": "Stale data labelled STALE with age, not shown as current",
+  "expected": "STALE + \"min ago\"",
+  "actual": "STALE Open-Meteo model | Service unreachable: showing data from 20 min ago. Open-Meteo model estimate (US AQI scale",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-21",
+  "name": "Vulnerable reports drawn as ~1 km dashed approximate-area circles at the API's generalised coordinates (never a pin)",
+  "expected": "4 circles r=550, no markers",
+  "actual": "4 shapes: circle:550",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-02b",
+  "name": "Priority list marks sample reports; shows no vulnerable free-text",
+  "expected": "SAMPLE tags, no \"bujurg\"/\"medicine\"",
+  "actual": "samples=10 leak=false",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-24x",
+  "name": "XSS regression: HTML in a report summary/category is rendered as text",
+  "expected": "no injected element, script not run",
+  "actual": "img=0 pwn=false ran=false",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-10e",
+  "name": "Reports API failure: error + Retry in list (not blank)",
+  "expected": "error and retry in list",
+  "actual": "Reports could not be loaded: Server error (500). Retry",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-12",
+  "name": "Submit with no location: blocked, clear message, NO request sent",
+  "expected": "no POST, message",
+  "actual": "Please set a location first: tap My location, or tap the map where the problem is. posts=0",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-14",
+  "name": "GPS permission denied: explains and points to the map; no location set",
+  "expected": "denied message; locInfo not set",
+  "actual": "Location permission was denied. Tap the map to choose the location instead. | Location: not set. Tap My location or tap the map.",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-14b",
+  "name": "GPS accepted but inaccurate (±4200 m): user warned and told how to correct",
+  "expected": "GPS + warning + Clear",
+  "actual": "Location: GPS (accuracy about 4200 m) GPS is not precise here. Tap the map to correct it. Clear",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-15",
+  "name": "Manual map selection sets location (source \"map\") and it is sent with the report",
+  "expected": "\"chosen on the map\"; POST has lat,lng,loc_source=map",
+  "actual": "Location: chosen on the map Clear | {\"text\":\"Minto bridge paani bhar gaya\",\"lat\":\"28.6139\",\"lng\":\"77.209\",\"loc_source\":\"map\"}",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-23",
+  "name": "Normal submission: success text, \"Not sent yet\", SAMPLE volunteers, authority wording; form + location reset; lists refreshed",
+  "expected": "all",
+  "actual": "notSent=true sample=2 auth=true textCleared=true loc=Location: chosen on  refreshed=true",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-02c",
+  "name": "No \"sent to the office\"-style wording in confirmation",
+  "expected": "absent",
+  "actual": "PRIORITY 59Elderly & Vulnerable Help · Karol Bagh Your report is recorded. Your complaint draft is ready to review. Not sent yet. This draft has not been sent t",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-23c",
+  "name": "Network failure on submit: NO false confirmation; text + location kept; honest message",
+  "expected": "\"NOT submitted\", no result card, text kept",
+  "actual": "Your report was NOT submitted. Could not reach the server. Your text and location are kept. Please try again. result=\"\" text=keep my text",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-23d",
+  "name": "Server validation error shown to user; input kept",
+  "expected": "server message",
+  "actual": "Location is required.",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-04b",
+  "name": "Consent unchecked: submit blocked, no request",
+  "expected": "no POST, prompt",
+  "actual": "Please read the privacy note and tick the box to continue. posts=0",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-17",
+  "name": "Browser pre-check rejects .exe",
+  "expected": "unsupported message",
+  "actual": "Unsupported photo. Please choose a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-19",
+  "name": "Browser pre-check rejects >5 MB",
+  "expected": "larger than 5 MB",
+  "actual": "That photo is larger than 5 MB. Please choose a smaller one.",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-16",
+  "name": "Browser pre-check accepts a normal JPG",
+  "expected": "Photo added",
+  "actual": "Photo added: ok.jpg",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-24",
+  "name": "Existing features: example chips, Map/List tabs, flag button (POST /abuse) still work",
+  "expected": "all true",
+  "actual": "chips=true tabs=true flagPost=true items=10",
+  "result": "PASS",
+  "evidence": ""
+ },
+ {
+  "id": "F-ROOT-a",
+  "name": "ORIGINAL page, Leaflet unavailable: whole script dies (counters stay 0, AQI stuck on Loading…)",
+  "expected": "reproduces the live symptoms",
+  "actual": "total=0 aqsrc=\"Loading…\" engine=\"AI · …\"",
+  "result": "PASS",
+  "evidence": "Simulated condition in jsdom. Shows a plausible cause; does NOT prove it is what happens on the live site."
+ },
+ {
+  "id": "F-ROOT-b",
+  "name": "PATCHED page, Leaflet unavailable: stats, list and AQI still work; map shows a message",
+  "expected": "16 + AQI + map notice",
+  "actual": "total=16 aqsrc=\"Live · Open-Meteo model\" map=\"The map could not load (the map library \"",
+  "result": "PASS",
+  "evidence": ""
+ }
+]

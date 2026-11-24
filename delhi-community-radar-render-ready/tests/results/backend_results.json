@@ -1,0 +1,470 @@
+[
+ {
+  "id": "B-24a",
+  "name": "Seed stats unchanged",
+  "expected": "16/14/2/4",
+  "actual": "16/14/2/4",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-24b",
+  "name": "All 16 seeds loaded, none skipped, all flagged sample",
+  "expected": "16 sample",
+  "actual": "16 sample of 16",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-24c",
+  "name": "Priority formula untouched (report's worked example = 59)",
+  "expected": "59",
+  "actual": "59",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-02",
+  "name": "Every volunteer record is marked sample (API)",
+  "expected": "all sample:true",
+  "actual": "True",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-12a",
+  "name": "Missing location rejected",
+  "expected": "422 + clear error, nothing stored",
+  "actual": "422 {'error': \"Location is required. Tap 'My location' or tap the map to set where the problem is.\"}",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-12b",
+  "name": "Only latitude supplied rejected",
+  "expected": "422",
+  "actual": "422",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-13",
+  "name": "Invalid / non-finite / out-of-NCR coordinates rejected",
+  "expected": "all 422, nothing stored",
+  "actual": "[422, 422, 422, 422, 422, 422, 422, 422]",
+  "result": "PASS",
+  "evidence": "cases: [('999', '999'), ('abc', '77.2'), ('nan', '77.2'), ('inf', '77.2'), ('-91', '77.2'), ('28.6', '181'), ('19.07', '72.87'), ('0', '0')]",
+  "remaining": ""
+ },
+ {
+  "id": "B-23a",
+  "name": "Normal GPS report accepted",
+  "expected": "200, locality from coordinates, source gps",
+  "actual": "200 locality=Karol Bagh source=gps",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-23b",
+  "name": "Owner response has draft, authority, SAMPLE volunteers; no cluster internals",
+  "expected": "volunteers all sample",
+  "actual": "[('Aarti Sharma', True), ('Seva Delhi NGO', True)]",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-12c",
+  "name": "Location far from any known locality is NOT given a random locality",
+  "expected": "Other Delhi NCR",
+  "actual": "Other Delhi NCR",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-12d",
+  "name": "Text-named locality never overrides coordinates; mismatch recorded for admin",
+  "expected": "locality=Okhla, hint=Ghazipur, mismatch",
+  "actual": "Okhla",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-27",
+  "name": "Over-long description rejected",
+  "expected": "413",
+  "actual": "413",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-09",
+  "name": "Phone / e-mail / 12-digit ID masked before storing",
+  "expected": "masked",
+  "actual": "Elderly neighbour Ramesh, call [phone removed] or [email removed], id [ID number removed]",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-27b",
+  "name": "Empty complaint rejected",
+  "expected": "422",
+  "actual": "422",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-27c",
+  "name": "Photo-only without AI key rejected with clear message",
+  "expected": "422",
+  "actual": "422 Photo-only reports need AI mode. Please add a short description as well.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-16jp",
+  "name": "Valid a.jpg accepted and passed to AI path with sniffed media type",
+  "expected": "200, media_type image/jpeg",
+  "actual": "200, passed image/jpeg",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-16pn",
+  "name": "Valid b.png accepted and passed to AI path with sniffed media type",
+  "expected": "200, media_type image/png",
+  "actual": "200, passed image/png",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-16we",
+  "name": "Valid c.webp accepted and passed to AI path with sniffed media type",
+  "expected": "200, media_type image/webp",
+  "actual": "200, passed image/webp",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17a",
+  "name": "virus.exe, MIME exe",
+  "expected": "415, nothing stored",
+  "actual": "415 Unsupported photo. Please upload a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17b",
+  "name": "a.exe with image MIME",
+  "expected": "415, nothing stored",
+  "actual": "415 Unsupported photo. Please upload a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17c",
+  "name": "GIF not allowed",
+  "expected": "415, nothing stored",
+  "actual": "415 Unsupported photo. Please upload a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17d",
+  "name": "SVG (script-capable) not allowed",
+  "expected": "415, nothing stored",
+  "actual": "415 Unsupported photo. Please upload a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17e",
+  "name": "No extension",
+  "expected": "415, nothing stored",
+  "actual": "415 Unsupported photo. Please upload a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17f",
+  "name": ".html named as image MIME",
+  "expected": "415, nothing stored",
+  "actual": "415 Unsupported photo. Please upload a JPG, PNG or WebP image.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-18a",
+  "name": "Disguised: exe bytes named .jpg, MIME image/jpeg",
+  "expected": "415, nothing stored",
+  "actual": "415 That file is not a valid image of the type its name says. Please upload a JPG, PNG or WebP photo.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-18b",
+  "name": "Disguised: text/script named .png",
+  "expected": "415, nothing stored",
+  "actual": "415 That file is not a valid image of the type its name says. Please upload a JPG, PNG or WebP photo.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-18c",
+  "name": "Disguised: PNG bytes named .jpg",
+  "expected": "415, nothing stored",
+  "actual": "415 That file is not a valid image of the type its name says. Please upload a JPG, PNG or WebP photo.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-18d",
+  "name": "Disguised: ELF binary named .webp",
+  "expected": "415, nothing stored",
+  "actual": "415 That file is not a valid image of the type its name says. Please upload a JPG, PNG or WebP photo.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-17g",
+  "name": "Empty file",
+  "expected": "400, nothing stored",
+  "actual": "400 That photo is empty. Please choose another one.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-19",
+  "name": "Oversized (>5 MB) photo rejected",
+  "expected": "413, nothing stored",
+  "actual": "413 That photo is too large. Photos must be 5 MB or smaller.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-19b",
+  "name": "Grossly oversized request stopped by Content-Length guard",
+  "expected": "413",
+  "actual": "413",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-20a",
+  "name": "Public API exposes only whitelisted fields",
+  "expected": "no text/draft/volunteers/flag data",
+  "actual": "no extra fields",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-20b",
+  "name": "No vulnerable-person wording / free text leaks anywhere in public JSON",
+  "expected": "no leaks",
+  "actual": "none",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-20c",
+  "name": "Sensitive reports have generic summary + 'approximate' precision",
+  "expected": "6 sensitive",
+  "actual": "6 checked",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-21a",
+  "name": "Sensitive public coordinates are 1-km grid-cell centres, not the stored point",
+  "expected": "coords != exact, on grid centre",
+  "actual": "6 checked, e.g. offset 254 m",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-21b",
+  "name": "Ordinary public coordinates rounded to 3 dp (~100 m)",
+  "expected": "<= 3 decimals",
+  "actual": "checked 17",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-21c",
+  "name": "Public API never lists a report without a valid location",
+  "expected": "none listed",
+  "actual": "inject + list",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-20d",
+  "name": "Submitter (owner) still gets their own complaint draft and map position",
+  "expected": "draft present, map_lat generalised",
+  "actual": "draft=True map=28.655,77.195",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-20e",
+  "name": "Draft is NOT in the public list",
+  "expected": "absent",
+  "actual": "checked",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-22a",
+  "name": "Public cannot read admin data",
+  "expected": "401",
+  "actual": "401",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-22b",
+  "name": "Admin login failure",
+  "expected": "401",
+  "actual": "401",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-22c",
+  "name": "Admin still sees full text, exact coordinates, location source, draft",
+  "expected": "all present",
+  "actual": "text=True lat=True src=gps",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-24d",
+  "name": "Admin hide / approve still work and affect the public list",
+  "expected": "hide removes, approve restores",
+  "actual": "200/True/200/True",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-24e",
+  "name": "Admin delete still works",
+  "expected": "200 and gone from store",
+  "actual": "200",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-24f",
+  "name": "Citizen flag: 3 distinct addresses hide a report",
+  "expected": "hidden",
+  "actual": "True",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-28",
+  "name": "Offensive report is held",
+  "expected": "flagged",
+  "actual": "True",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-05",
+  "name": "AQI success: live, Open-Meteo, not CPCB, has update time",
+  "expected": "status live, simulated false",
+  "actual": "live simulated=False updated=2026-11-24T14:00 fetched_at=True",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-06",
+  "name": "AQI upstream timeout: simulated, labelled, no live claim",
+  "expected": "status simulated",
+  "actual": "simulated | SIMULATED illustrative values. Not measurements. The live data service could not be reached.",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-07",
+  "name": "AQI upstream HTTP 500: simulated, labelled",
+  "expected": "status simulated",
+  "actual": "simulated",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-08a",
+  "name": "Upstream down, 20-min-old data: shown but labelled STALE with age",
+  "expected": "status stale, age ~1200 s",
+  "actual": "stale age=1200",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-08b",
+  "name": "Upstream down, 4-hour-old data: NOT shown as current; simulated + last success time",
+  "expected": "simulated, last_success set",
+  "actual": "simulated last_success=1795502533",
+  "result": "PASS",
+  "evidence": "",
+  "remaining": ""
+ },
+ {
+  "id": "B-08c",
+  "name": "Real network call (sandbox has no internet) fails safely to simulated",
+  "expected": "simulated",
+  "actual": "simulated",
+  "result": "PASS",
+  "evidence": "Real Open-Meteo success path is NOT TESTED against the live service",
+  "remaining": "needs internet access"
+ }
+]
